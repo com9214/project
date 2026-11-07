@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우리집 지출 분석</title>
+<style>
+:root{--ink:#172b3a;--muted:#667987;--line:#dce6e9;--paper:#fff;--bg:#f3f7f5;--green:#147d64;--mint:#e5f4ee;--red:#b42318;--orange:#ec9e45}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif;line-height:1.55}main{max-width:1080px;margin:auto;padding:28px 20px 60px}header{margin-bottom:22px}h1{font-size:clamp(1.7rem,4vw,2.5rem);margin:0 0 5px;letter-spacing:-.04em}h2{font-size:1.18rem;margin:0 0 16px}p{margin:5px 0;color:var(--muted)}.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:22px;margin:16px 0;box-shadow:0 5px 18px #1b3b3510}.drop{border:2px dashed #a8c9bd;border-radius:15px;background:#f8fcfa;text-align:center;padding:25px 16px;transition:.15s}.drop.over{background:#e5f4ee;border-color:var(--green)}.drop strong{display:block;font-size:1.08rem}.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}button,.filebutton{border:0;border-radius:10px;padding:11px 17px;font:inherit;font-weight:700;cursor:pointer;background:var(--green);color:#fff;min-height:44px}button.secondary{background:#e9f1ee;color:#245346}button:hover,.filebutton:hover{filter:brightness(.95)}input[type=file]{display:none}.notice{margin-top:13px;font-weight:650}.notice.error{color:var(--red)}.notice.ok{color:var(--green)}.privacy{font-size:.88rem;margin-top:13px}.summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.metric{background:linear-gradient(135deg,#e7f4ed,#f4faf7);border-radius:14px;padding:20px}.metric span{display:block;color:#4c685d;font-size:.94rem}.metric strong{display:block;font-size:clamp(1.65rem,5vw,2.5rem);letter-spacing:-.04em;margin-top:5px;overflow-wrap:anywhere}.subtle{font-size:.9rem;color:var(--muted)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.tablewrap{width:100%;overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:300px}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--line)}th{font-size:.9rem;color:#50636f;background:#f8faf9}td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}tfoot td{font-weight:800}.chartbox{display:flex;align-items:center;gap:24px;flex-wrap:wrap}.pie{width:190px;height:190px;border-radius:50%;background:#edf1ef;flex:none}.legend{padding:0;margin:0;list-style:none;flex:1;min-width:170px}.legend li{display:flex;align-items:center;gap:9px;margin:8px 0;font-size:.94rem}.swatch{width:12px;height:12px;border-radius:3px;flex:none}.barlist{display:flex;flex-direction:column;gap:13px}.barrow{display:grid;grid-template-columns:minmax(74px,100px) 1fr auto;gap:10px;align-items:center}.bartrack{height:22px;background:#edf2f0;border-radius:6px;overflow:hidden}.bar{height:100%;background:linear-gradient(90deg,#168568,#72c4a1);border-radius:6px;min-width:2px}.barvalue{font-size:.9rem;font-weight:650;font-variant-numeric:tabular-nums}.toplist{list-style:none;padding:0;margin:0;counter-reset:rank}.toplist li{counter-increment:rank;display:grid;grid-template-columns:36px 1fr auto;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);align-items:center}.toplist li:before{content:counter(rank,decimal-leading-zero);color:var(--green);font-weight:800}.topname{overflow-wrap:anywhere}.topamt{white-space:nowrap;font-weight:750}.hidden{display:none!important}.empty{color:var(--muted);padding:12px 0}.source{overflow-wrap:anywhere;font-size:.88rem;color:var(--muted)}
+@media(max-width:650px){main{padding:18px 14px 38px}.card{padding:17px;margin:12px 0;border-radius:15px}.grid{grid-template-columns:1fr;gap:0}.chartbox{gap:16px}.pie{width:min(190px,50vw);height:min(190px,50vw);margin:auto}.legend{min-width:100%}.barrow{grid-template-columns:68px 1fr;gap:7px}.barvalue{grid-column:2;text-align:right;margin-top:-7px;font-size:.82rem}.bartrack{grid-column:2;grid-row:1;height:18px}.barlabel{grid-row:1;align-self:start;font-size:.88rem}.tablewrap table{min-width:0}th,td{padding:10px 5px;font-size:.87rem}.summary{gap:9px}.metric{padding:15px 13px}.drop{padding:21px 12px}}
+</style>
+</head>
+<body>
+<main>
+<header><h1>우리집 지출 분석</h1><p>가계부 CSV를 불러와 지출 흐름을 한눈에 확인하세요.</p></header>
+<section class="card" aria-label="CSV 파일 불러오기"><div class="drop" id="drop"><strong>CSV 파일을 여기에 끌어다 놓으세요</strong><p>UTF-8 또는 EUC-KR(CP949) 인코딩을 지원합니다.</p><div class="actions"><label class="filebutton" for="file">CSV 파일 선택</label><button class="secondary" id="example">예제 데이터로 먼저 보기</button></div><input id="file" type="file" accept=".csv,text/csv"><div id="notice" class="notice" role="status" aria-live="polite"></div></div><p class="privacy">파일은 이 브라우저 안에서만 분석하며 서버로 전송하거나 저장하지 않습니다. 필수 열: 날짜, 분류, 항목, 금액</p></section>
+<section id="results" class="hidden" aria-live="polite"><div class="summary"><div class="metric"><span>총 지출액</span><strong id="total">₩0</strong></div><div class="metric"><span>유효 지출 건수</span><strong id="count">0건</strong></div></div>
+<div class="grid"><section class="card"><h2>분류별 지출</h2><div class="tablewrap"><table><thead><tr><th>분류</th><th class="num">금액</th><th class="num">전체 대비 비율(%)</th></tr></thead><tbody id="categoryRows"></tbody><tfoot><tr><td>합계</td><td class="num" id="categoryTotal"></td><td class="num" id="categoryPct">100%</td></tr></tfoot></table></div></section><section class="card"><h2>분류 비율</h2><div class="chartbox"><div id="pie" class="pie" role="img" aria-label="분류별 지출 원형 그래프"></div><ul id="legend" class="legend"></ul></div></section></div>
+<section class="card"><h2>월별 지출</h2><p class="subtle">날짜를 월 단위로 모아 합산했습니다.</p><div id="bars" class="barlist"></div></section>
+<section class="card"><h2>지출 상위 5개 항목</h2><ol id="top" class="toplist"></ol></section><p id="source" class="source"></p></section>
+</main>
+<script>
+// 예제 데이터는 버튼을 눌렀을 때 체험용으로 표시합니다.
+const sample=`날짜,분류,항목,금액
+2026-06-02,식비,동네마트 장보기,54200
+2026-06-03,교통비,버스 교통카드 충전,30000
+2026-06-05,식비,점심 김밥천국,9500
+2026-06-07,생활용품,세제 휴지 묶음,23800
+2026-06-08,의료비,감기약 구입,8600
+2026-06-10,식비,마트 정육 코너,38700
+2026-06-12,통신비,휴대폰 요금,45000
+2026-06-14,문화여가,영화 관람 2인,28000
+2026-06-15,식비,동네 반찬가게,22000
+2026-06-17,교통비,택시,12400
+2026-06-18,공과금,전기요금,38200
+2026-06-18,공과금,수도요금,14300
+2026-06-20,식비,주말 장보기,61500
+2026-06-22,생활용품,주방 수세미 세트,7900
+2026-06-24,교육비,평생교육원 수강료,50000
+2026-06-25,식비,치킨 배달,21000
+2026-06-27,의류미용,미용실 커트,18000
+2026-06-28,식비,커피 2잔,9000
+2026-06-30,경조사비,친척 결혼식 축의금,100000
+2026-07-01,식비,동네마트 장보기,48300
+2026-07-03,교통비,버스 교통카드 충전,30000
+2026-07-04,생활용품,선풍기 구입,54000
+2026-07-06,식비,점심 백반,10000
+2026-07-08,의료비,정형외과 진료,15500
+2026-07-09,식비,마트 과일,26400
+2026-07-12,통신비,휴대폰 요금,45000
+2026-07-13,문화여가,도서 구입,32000
+2026-07-15,식비,주말 장보기,57800
+2026-07-16,공과금,전기요금,62400
+2026-07-16,공과금,수도요금,15100
+2026-07-18,교통비,고속버스 왕복,34000
+2026-07-19,식비,외식 삼겹살,46000
+2026-07-21,생활용품,모기약 방충망,18600
+2026-07-23,교육비,평생교육원 수강료,50000
+2026-07-25,의류미용,여름 티셔츠 2장,39000
+2026-07-26,식비,커피 3잔,13500
+2026-07-28,식비,동네 반찬가게,19500
+2026-07-30,문화여가,공연 관람,45000
+2026-08-01,식비,동네마트 장보기,52600
+2026-08-02,교통비,버스 교통카드 충전,30000
+2026-08-04,식비,점심 냉면,11000
+2026-08-05,생활용품,욕실 용품 세트,21400
+2026-08-07,의료비,치과 스케일링,45000
+2026-08-09,식비,마트 정육 코너,41200
+2026-08-11,통신비,휴대폰 요금,45000
+2026-08-12,문화여가,영화 관람 2인,30000
+2026-08-14,식비,주말 장보기,64300
+2026-08-15,공과금,전기요금,71800
+2026-08-15,공과금,수도요금,16200
+2026-08-17,교통비,택시,9800
+2026-08-18,경조사비,지인 부친상 조의금,50000
+2026-08-20,식비,외식 칼국수,24000
+2026-08-22,생활용품,청소도구 교체,13700
+2026-08-23,교육비,평생교육원 수강료,50000
+2026-08-25,의류미용,미용실 파마,65000
+2026-08-26,식비,커피 2잔,9000
+2026-08-28,식비,치킨 배달,23000
+2026-08-29,문화여가,근교 나들이 입장료,16000
+2026-08-31,식비,동네 반찬가게,20500`;
+const colors=['#168568','#e9a23b','#6387c5','#d66c62','#8a69b4','#39a8aa','#c270a3','#88963d','#dd7c42','#547b8f','#a78b63'];
+const $=s=>document.querySelector(s), won=n=>'₩'+Math.round(n).toLocaleString('ko-KR');
+// 상태 메시지는 형식 오류를 분명한 빨간 안내로 표시합니다.
+function message(t,error=false){const n=$('#notice');n.textContent=t;n.className='notice '+(error?'error':'ok')}
+// 쉼표가 따옴표 안에 있는 CSV도 셀 단위로 읽습니다.
+function parseCSV(s){const rows=[];let row=[],field='',quoted=false;for(let i=0;i<s.length;i++){const c=s[i];if(quoted){if(c==='"'&&s[i+1]==='"'){field+='"';i++}else if(c==='"')quoted=false;else field+=c}else if(c==='"'){if(field.length)throw Error('따옴표 위치가 올바르지 않습니다.');quoted=true}else if(c===','){row.push(field);field=''}else if(c==='\n'){row.push(field);rows.push(row);row=[];field=''}else if(c!=='\r')field+=c}if(quoted)throw Error('따옴표가 닫히지 않았습니다.');if(field.length||row.length){row.push(field);rows.push(row)}return rows}
+// 파일 형식과 필수 열을 확인한 뒤 행마다 날짜와 금액을 검사합니다.
+function analyze(text,name){const rows=parseCSV(text);if(rows.length<2)throw Error('데이터가 없습니다. 제목 행과 지출 행이 있는 CSV를 선택해 주세요.');const heads=rows[0].map(x=>x.trim().replace(/^\uFEFF/,''));const required=['날짜','분류','항목','금액'];const idx={};for(const h of required){idx[h]=heads.indexOf(h);if(idx[h]<0)throw Error(`필수 열 “${h}”을(를) 찾지 못했습니다. 첫 줄에 날짜, 분류, 항목, 금액 열을 넣어 주세요.`)}let valid=[],issues=[];rows.slice(1).forEach((r,j)=>{const line=j+2;if(r.every(c=>!c.trim()))return;if(r.length!==heads.length){issues.push(`${line}행: 열 개수가 제목 행과 다릅니다.`);return}const date=(r[idx['날짜']]||'').trim(),cat=(r[idx['분류']]||'').trim(),item=(r[idx['항목']]||'').trim(),raw=(r[idx['금액']]||'').trim();const missing=[];if(!date)missing.push('날짜');if(!cat)missing.push('분류');if(!item)missing.push('항목');if(!raw)missing.push('금액');if(missing.length){issues.push(`${line}행: ${missing.join(', ')} 값이 비어 있어 제외했습니다.`);return}if(!/^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}$/.test(date)){issues.push(`${line}행: 날짜 “${date}” 형식을 확인해 주세요. 예: 2026-06-02`);return}const norm=date.replace(/[/.]/g,'-'),parts=norm.split('-').map(Number),dt=new Date(parts[0],parts[1]-1,parts[2]);if(dt.getFullYear()!==parts[0]||dt.getMonth()!==parts[1]-1||dt.getDate()!==parts[2]){issues.push(`${line}행: 날짜 “${date}”이(가) 실제 달력 날짜가 아닙니다.`);return}const cleaned=raw.replace(/[₩원\s,]/g,'');if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(cleaned)||!Number.isFinite(Number(cleaned))||Number(cleaned)<=0){issues.push(`${line}행: 금액 “${raw}”을(를) 양수 숫자로 읽을 수 없습니다.`);return}valid.push({date:parts[0]+'-'+String(parts[1]).padStart(2,'0')+'-'+String(parts[2]).padStart(2,'0'),month:parts[0]+'-'+String(parts[1]).padStart(2,'0'),cat,item,amount:Number(cleaned)})});if(!valid.length)throw Error((issues.slice(0,8).join(' ')||'분석할 수 있는 지출 행이 없습니다.')+' 유효한 금액과 날짜가 있는 행을 확인해 주세요.');render(valid,name,issues)}
+// 집계 결과와 표, 원형 그래프, 월별 막대, TOP 5를 그립니다.
+function render(data,name,issues=[]){const total=data.reduce((a,x)=>a+x.amount,0),cats=new Map(),months=new Map(),items=new Map();data.forEach(x=>{cats.set(x.cat,(cats.get(x.cat)||0)+x.amount);months.set(x.month,(months.get(x.month)||0)+x.amount);items.set(x.item,(items.get(x.item)||0)+x.amount)});$('#results').classList.remove('hidden');$('#total').textContent=won(total);$('#count').textContent=data.length.toLocaleString('ko-KR')+'건';const sortedCats=[...cats].sort((a,b)=>b[1]-a[1]);$('#categoryRows').innerHTML=sortedCats.map(([c,v])=>`<tr><td>${esc(c)}</td><td class="num">${won(v)}</td><td class="num">${(v/total*100).toFixed(1)}%</td></tr>`).join('');$('#categoryTotal').textContent=won(total);$('#categoryPct').textContent='100%';let cursor=0;const stops=sortedCats.map(([c,v],i)=>{const start=cursor;cursor+=v/total*100;return `${colors[i%colors.length]} ${start.toFixed(2)}% ${cursor.toFixed(2)}%`});$('#pie').style.background=`conic-gradient(${stops.join(',')})`;$('#legend').innerHTML=sortedCats.map(([c,v],i)=>`<li><span class="swatch" style="background:${colors[i%colors.length]}"></span><span>${esc(c)} · ${(v/total*100).toFixed(1)}%</span></li>`).join('');const sm=[...months].sort((a,b)=>a[0].localeCompare(b[0])),max=Math.max(...sm.map(x=>x[1]));$('#bars').innerHTML=sm.map(([m,v])=>`<div class="barrow"><span class="barlabel">${m}</span><div class="bartrack"><div class="bar" style="width:${Math.max(1,v/max*100)}%" title="${won(v)}"></div></div><span class="barvalue">${won(v)}</span></div>`).join('');$('#top').innerHTML=[...items].sort((a,b)=>b[1]-a[1]).slice(0,5).map(([i,v])=>`<li><span class="topname">${esc(i)}</span><span class="topamt">${won(v)}</span></li>`).join('');$('#source').textContent=`${name} · ${data.length}건 분석 완료`+(issues.length?` · 제외된 행 ${issues.length}건: ${issues.slice(0,5).join(' / ')}${issues.length>5?' 외 '+(issues.length-5)+'건':''}`:'');if(issues.length)message(`분석을 마쳤습니다. 유효 ${data.length}건, 제외 ${issues.length}건입니다. 제외 사유는 아래 안내를 확인하세요.`);else message(`분석을 마쳤습니다. ${data.length}건의 지출을 확인했습니다.`)}
+// CSV 값이 화면에 표시될 때 HTML로 실행되지 않게 처리합니다.
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+// UTF-8을 먼저 확인하고 한글이 깨지면 CP949/EUC-KR로 다시 읽습니다.
+async function readFile(file){if(!file.name.toLowerCase().endsWith('.csv'))throw Error('CSV 파일이 아닙니다. .csv 파일을 선택해 주세요.');const buf=await file.arrayBuffer();let decoded=new TextDecoder('utf-8',{fatal:false}).decode(buf);if(decoded.includes('\uFFFD')){try{decoded=new TextDecoder('euc-kr').decode(buf)}catch{throw Error('파일 인코딩을 읽지 못했습니다. UTF-8 또는 EUC-KR로 저장해 주세요.')}}if(decoded.includes('\uFFFD'))throw Error('한글 인코딩을 읽지 못했습니다. UTF-8 또는 EUC-KR로 저장해 주세요.');analyze(decoded,file.name)}
+// 새 파일을 선택하면 기존 결과를 지우고 새 분석으로 교체합니다.
+async function load(file){$('#results').classList.add('hidden');$('#source').textContent='';message('파일을 확인하고 있습니다…');try{await readFile(file)}catch(e){$('#results').classList.add('hidden');message(e.message||'파일을 읽지 못했습니다.',true)}}
+$('#file').addEventListener('change',e=>{if(e.target.files[0])load(e.target.files[0]);e.target.value=''});$('#example').addEventListener('click',()=>{try{analyze(sample,'예제 데이터')}catch(e){message(e.message,true)}});const drop=$('#drop');drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over')});drop.addEventListener('dragleave',()=>drop.classList.remove('over'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');if(e.dataTransfer.files[0])load(e.dataTransfer.files[0])});
+</script>
+</body>
+</html>
